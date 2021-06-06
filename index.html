@@ -1,25 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
-    <script src="index.js" text="text/javascript"></script>
+    <title>LWC</title>
     <script>
-        document.getElementById('download-btn').addEventListener('click', function () {
+        import {Wiki} from './index.js'
 
-        })
+        const wiki = new Wiki()
+
+        document.getElementById('download-wiki-btn').addEventListener('click', wiki.saveDatabase)
     </script>
 </head>
 <body>
-<h1>LocalWikiCrawler</h1>
+<h1>Local Wiki Crawler by <a href="https://jpkmiller.github.io">jpkmiller</a></h1>
+<h2>Wiki. Offline. Everywhere.</h2>
 <p id="download">
-    <button id="download-btn" onclick="">Download</button>
+    <button id="download-wiki-btn" onclick="saveDatabase()">Download from german Wikipedia</button>
 </p>
 <p id="search">
-    <label for="search-input">Search</label><input id="search-input"/>
+    <label for="search-input">Search</label>
+    <input id="search-input"/>
 </p>
 <style>
     body {
-        font-size:2vw;
+        font-family: "Liberation Sans", serif;
+        font-size: 2vw;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
     }
 </style>
 </body>
