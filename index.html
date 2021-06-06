@@ -105,7 +105,7 @@
                     const article = articles[i].article
                     setTimeout(() => {
                         console.log(`Searching ${article} ...`)
-                        /* document.getElementById('downloaded-item').innerText = `Searching ${article} ...` */
+                        document.getElementById('downloaded-item').innerText = `Searching ${article} ...`
                         downloadItem(article)
                     }, 300)
                 }
@@ -154,6 +154,7 @@
     function clear() {
         document.getElementById('search-input').value = ''
         document.getElementById('search-result').innerText = ''
+        document.getElementById('downloaded-item').innerText = ''
     }
 
     document.getElementById('download-wiki-btn').addEventListener('click', saveDatabase)
