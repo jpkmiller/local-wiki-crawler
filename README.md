@@ -1,1 +1,1 @@
-# LocalSearchEngine
+# LocalWikiCrawler
