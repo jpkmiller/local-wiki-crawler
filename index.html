@@ -123,7 +123,7 @@
         console.log('Downloading Wiki Database')
 
         const now = new Date();
-        for (let d = new Date(2020, 0, 1); d <= now; new Date(d.setMonth(d.getMonth() + 1))) {
+        for (let d = new Date(2021, 0, 1); d <= now; new Date(d.setMonth(d.getMonth() + 1))) {
             const YEAR = d.getFullYear().toString()
             const MONTH = ('0' + (d.getMonth())).slice(-2) /* https://stackoverflow.com/a/3605248 */
             setTimeout(() => {
@@ -134,12 +134,21 @@
 
     function searchCachedItem() {
         const query = document.getElementById('search-input').value
-        const item = getCachedItem(query)
+        var item = getCachedItem(query)
         console.log(`Searching for ${query}`)
-        if (item != null) {
-            console.log(item)
-            document.getElementById('search-result').innerText = item
+        if (item == null) {
+            /* fallback */
+            /* used from https://gist.github.com/n0m4dz/77f08d3de1b9115e905c by https://github.com/n0m4dz */
+            for (let i in localStorage) {
+                if (localStorage.hasOwnProperty(i)) {
+                    if (i.match(query) || (!query && typeof i === 'string')) {
+                        item = localStorage.getItem(i);
+                        break;
+                    }
+                }
+            }
         }
+        document.getElementById('search-result').innerText = item
     }
 
     function clear() {
