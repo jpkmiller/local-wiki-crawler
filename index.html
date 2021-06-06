@@ -16,17 +16,26 @@
             color: inherit;
             text-decoration: none;
         }
+
+        button {
+            font-size: inherit;
+        }
     </style>
 </head>
 <body>
 <h1>Local Wiki Crawler by <a href="https://jpkmiller.github.io">jpkmiller</a></h1>
-<h2>Wiki. Offline. Everywhere.</h2>
 <p id="download">
-    <button id="download-wiki-btn">Download from german Wikipedia</button>
+    <button id="download-wiki-btn">Download from Wikipedia.de</button>
+<div>
+    <span id="downloaded-item"></span>
+</div>
 </p>
 <p id="search">
-    <label for="search-input">Search</label>
     <input id="search-input"/>
+    <label for="search-input">
+        <button id="search-btn">Search</button>
+    </label>
+<div id="search-result"></div>
 </p>
 <script>
     const QUERY_WIKIPEDIA_DE = "https://de.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&excontinue=0&format=json&origin=*&titles="
@@ -48,13 +57,11 @@
         return await response.json()
     }
 
-    function searchItem(query, callback) {
-        console.log(`Searching for ${query}`)
-        const cachedItem = getCachedItem(query)
-        if (cachedItem !== null) {
-            callback(cachedItem)
-        } else {
+    function downloadItem(query) {
+        if (getCachedItem(query) === null) {
             try {
+                console.log(`Downloading ${query} ...`)
+                /* document.getElementById('downloaded-item').innerText = `Downloading ${query} ...` */
                 getWikiItem(query)
                     .then(item => {
                         const page = Object.keys(item.query.pages)[0]
@@ -62,7 +69,6 @@
                         if (typeof extractedData !== 'undefined') {
                             saveItem(query, extractedData)
                         }
-                        callback(extractedData)
                     }).catch(e => e.message)
             } catch (err) {
                 console.error(err)
@@ -80,10 +86,13 @@
                 const articles = data.items[0].articles
                 const articlesLen = articles.length
                 for (let i = 0; i < articlesLen; i++) {
+                    const article = articles[i].article
                     setTimeout(() => {
-                        searchItem(articles[i].article, () => {
+                        console.log(`Searching ${article} ...`)
+                        /* document.getElementById('downloaded-item').innerText = `Searching ${article} ...` */
+                        downloadItem(article, () => {
                         })
-                    }, 100)
+                    }, 300)
                 }
             }
         }
@@ -95,7 +104,18 @@
         xhr.send()
     }
 
+    function searchCachedItem() {
+        const query = document.getElementById('search-input').value
+        const item = getCachedItem(query)
+        console.log(`Searching for ${query}`)
+        if (item != null) {
+            console.log(item)
+            document.getElementById('search-result').innerText = item
+        }
+    }
+
     document.getElementById('download-wiki-btn').addEventListener('click', saveDatabase)
+    document.getElementById('search-btn').addEventListener('click', searchCachedItem)
 </script>
 </body>
 </html>
