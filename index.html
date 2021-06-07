@@ -10,7 +10,7 @@
         <link rel="apple-touch-icon" href="favicon.ico">
         <style>
             body {
-                font-family: "Liberation Sans", serif;
+                font-family: SansSerif, Hiragino Sans, sans-serif;
                 font-size: 2vw;
             }
 
@@ -25,25 +25,32 @@
         </style>
     </head>
     <body>
-        <h1>Local Wiki Crawler by <a href="https://jpkmiller.github.io">jpkmiller</a></h1>
-        <h2>Before searching click the Download button</h2>
+        <h1>Local Wiki Crawler by <a href="https://jpkmiller.github.io">jpkmiller</a>.</h1>
+        <h2>Before searching please click the Download button.</h2>
+        <h2>Add this site to your Homescreen and<br /><u>enjoy more than 1000 trending Articles offline</u>.</h2>
+        <br />
 
         <!-- download the 1000 trending articles from wikipedia -->
         <div id="download">
-            <button id="download-wiki-btn">Download from Wikipedia.de</button>
+            <button id="download-wiki-btn">Download Trending Articles from Wikipedia.de</button>
             <progress id="download-progress" value="0" max="1.0" style="display: none"></progress>
             <div>
                 <span id="downloaded-item"></span>
             </div>
         </div>
-        <br>
+        <br />
 
         <div id="search">
             <input id="search-input" />
             <label for="search-input">
                 <button id="search-btn">Search</button>
             </label>
+            <button id="show-all-btn">Show All</button>
             <button id="clear-btn">Clear</button>
+        </div>
+        <br />
+
+        <div id="result">
             <div id="search-result"></div>
         </div>
 
@@ -122,7 +129,7 @@
                                 document.getElementById('download-progress').value = articlesDownloaded
                                 document.getElementById('downloaded-item').innerText = `Searching ${article} ...`
                                 downloadAndSaveWikiItem(article)
-                            }, 300)
+                            }, 1000)
                         }
                     }
                 }
@@ -136,7 +143,10 @@
              */
             function downloadWikipedia() {
                 console.log('Downloading Wiki Database')
-                document.getElementById('download-progress').style.display = 'block'
+                const downloadProgressBar = document.getElementById('download-progress')
+                downloadProgressBar.style.display = 'block'
+                downloadProgressBar.value = 0
+                downloadProgressBar.max = 1.0
 
                 const now = new Date();
                 for (let d = new Date(2021, 0, 1); d <= now; new Date(d.setMonth(d.getMonth() + 1))) {
@@ -144,16 +154,16 @@
                     const MONTH = ('0' + (d.getMonth())).slice(-2) /* https://stackoverflow.com/a/3605248 */
                     setTimeout(() => {
                         getTrendingWikiItems(YEAR, MONTH)
-                    }, 1000)
+                    }, 2000)
                 }
             }
 
-            function searchCachedItem() {
+            function searchCachedWikiItem() {
                 const query = document.getElementById('search-input').value
                 let item = getCachedItem(query);
                 console.log(`Searching for ${query}`)
                 if (item == null) {
-                    /* fallback */
+                    /* fallback, if item was not found directly. */
                     /* used from https://gist.github.com/n0m4dz/77f08d3de1b9115e905c by https://github.com/n0m4dz */
                     for (let i in localStorage) {
                         if (localStorage.hasOwnProperty(i)) {
@@ -167,6 +177,20 @@
                 document.getElementById('search-result').innerText = item
             }
 
+            function showAllWikiItems() {
+                const searchResults = document.getElementById('search-result')
+                searchResults.innerText = ''
+                const listContainer = document.createElement('ul')
+                for (let i in localStorage) {
+                    if (localStorage.hasOwnProperty(i)) {
+                        let listItem = document.createElement('li')
+                        listItem.innerText = i
+                        listContainer.appendChild(listItem)
+                    }
+                }
+                searchResults.appendChild(listContainer)
+            }
+
             function clear() {
                 document.getElementById('search-input').value = ''
                 document.getElementById('search-result').innerText = ''
@@ -175,8 +199,9 @@
             }
 
             document.getElementById('download-wiki-btn').addEventListener('click', downloadWikipedia)
-            document.getElementById('search-btn').addEventListener('click', searchCachedItem)
+            document.getElementById('search-btn').addEventListener('click', searchCachedWikiItem)
             document.getElementById('clear-btn').addEventListener('click', clear)
+            document.getElementById('show-all-btn').addEventListener('click', showAllWikiItems)
         </script>
     </body>
 </html>
