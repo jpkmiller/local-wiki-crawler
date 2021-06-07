@@ -45,6 +45,7 @@
             <label for="search-input">
                 <button id="search-btn">Search</button>
             </label>
+            <button id="pick-rnd-btn">Pick Random</button>
             <button id="show-all-btn">Show All</button>
             <button id="clear-btn">Clear</button>
         </div>
@@ -158,6 +159,10 @@
                 }
             }
 
+            /*
+            Gets the article from localStorage.
+            If not found immediately then it iterates through the whole localStorage and compares query with the key.
+             */
             function searchCachedWikiItem() {
                 const query = document.getElementById('search-input').value
                 let item = getCachedItem(query);
@@ -181,6 +186,9 @@
                 document.getElementById('search-result').innerText = item
             }
 
+            /*
+            Renders a list of all saved/cached items.
+             */
             function showAllWikiItems() {
                 const searchResults = document.getElementById('search-result')
                 searchResults.innerText = ''
@@ -195,6 +203,18 @@
                 searchResults.appendChild(listContainer)
             }
 
+            function pickRandomWikiItem() {
+
+                for (let i in localStorage) {
+                    if (localStorage.hasOwnProperty(i)) {
+                        if (Math.random() * 100 > 90 && Math.random() * 100 < 20 && localStorage.getItem(i) !== '') {
+                            document.getElementById('search-result').innerText = localStorage.getItem(i)
+                            break
+                        }
+                    }
+                }
+            }
+
             function clear() {
                 document.getElementById('search-input').value = ''
                 document.getElementById('search-result').innerText = ''
@@ -205,6 +225,7 @@
             document.getElementById('download-wiki-btn').addEventListener('click', downloadWikipedia)
             document.getElementById('search-btn').addEventListener('click', searchCachedWikiItem)
             document.getElementById('clear-btn').addEventListener('click', clear)
+            document.getElementById('pick-rnd-btn').addEventListener('click', pickRandomWikiItem)
             document.getElementById('show-all-btn').addEventListener('click', showAllWikiItems)
         </script>
     </body>
