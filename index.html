@@ -166,11 +166,15 @@
                     /* fallback, if item was not found directly. */
                     /* used from https://gist.github.com/n0m4dz/77f08d3de1b9115e905c by https://github.com/n0m4dz */
                     for (let i in localStorage) {
-                        if (localStorage.hasOwnProperty(i)) {
-                            if (i.toLowerCase().match(query.trim().toLowerCase()) || (!query && typeof i === 'string')) {
-                                item = localStorage.getItem(i);
-                                break;
-                            }
+                        if (localStorage.hasOwnProperty(i)
+                                && (i.replace(/[\s_\-]/g, '')
+                                                .toLowerCase()
+                                                .match(query.trim()
+                                                        .replace(/[\s_\-]/g, '')
+                                                        .toLowerCase())
+                                        || (!query && typeof i === 'string'))) {
+                            item = localStorage.getItem(i);
+                            break;
                         }
                     }
                 }
