@@ -1,165 +1,182 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
-    <title>LWC</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Local Wiki Crawler downloads most read Wikipedia Articles.">
-    <link rel="shortcut icon" href="favicon.ico"/>
-    <style>
-        body {
-            font-family: "Liberation Sans", serif;
-            font-size: 2vw;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        button, input {
-            font-size: inherit;
-        }
-    </style>
-</head>
-<body>
-<h1>Local Wiki Crawler by <a href="https://jpkmiller.github.io">jpkmiller</a></h1>
-
-<!-- download the 1000 trending articles from wikipedia -->
-<p id="download">
-    <button id="download-wiki-btn">Download from Wikipedia.de</button>
-<div>
-    <span id="downloaded-item"></span>
-</div>
-</p>
-
-<!-- search localStorage. This is neat when offline. It even works when the page is closed and reopened again -->
-<p id="search">
-    <input id="search-input"/>
-    <label for="search-input">
-        <button id="search-btn">Search</button>
-    </label>
-    <button id="clear-btn">Clear</button>
-<div id="search-result"></div>
-</p>
-
-<script>
-    const QUERY_WIKIPEDIA_DE = "https://de.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&excontinue=0&format=json&origin=*&titles="
-    const QUERY_TRENDING_WIKIPEDIA_DE = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/de.wikipedia/all-access/YEAR/MONTH/all-days"
-
-    function getCachedItem(query) {
-        return localStorage.getItem(query)
-    }
-
-    function saveItem(query, value) {
-        localStorage.setItem(query, value)
-    }
-
-    /*
-    Sends a request to Wikipedia.
-    */
-    async function getWikiItem(query) {
-        const response = await fetch(`${QUERY_WIKIPEDIA_DE}${query}`)
-        if (!response.ok) {
-            throw Error(response.statusText)
-        }
-        return await response.json()
-    }
-
-    /*
-    Sends a request to Wikipedia via getWikiItem() to download the contents of a page.
-    The contents is sent as a JSON is then saved to the localStorage with saveItem().
-     */
-    function downloadItem(query) {
-        if (getCachedItem(query) === null) {
-            try {
-                console.log(`Downloading ${query} ...`)
-                /* document.getElementById('downloaded-item').innerText = `Downloading ${query} ...` */
-                getWikiItem(query)
-                    .then(item => {
-                        const page = Object.keys(item.query.pages)[0]
-                        const extractedData = item.query.pages[page].extract
-                        if (typeof extractedData !== 'undefined') {
-                            saveItem(query, extractedData)
-                        }
-                    }).catch(e => e.message)
-            } catch (err) {
-                console.error(err)
+    <head>
+        <title>LWC</title>
+        <meta charset="UTF-8">
+        <meta name="theme-color" content="white">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Local Wiki Crawler downloads most read Wikipedia Articles.">
+        <link rel="shortcut icon" href="favicon.ico" />
+        <link rel="apple-touch-icon" href="favicon.ico">
+        <style>
+            body {
+                font-family: "Liberation Sans", serif;
+                font-size: 2vw;
             }
-        }
-    }
 
-    /*
-    Gets trending articles from Wikipedia from specific month and year and then downloads them via downloadItem().
-    */
-    function getTrendingArticles(YEAR, MONTH) {
-        const xhr = new XMLHttpRequest();
-        console.log(`Downloading for ${YEAR}/${MONTH}...`)
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
 
-        xhr.onreadystatechange = function () {
-            const data = JSON.parse(this.response)
-            if ('articles' in data.items[0]) {
-                const articles = data.items[0].articles
-                const articlesLen = articles.length
-                for (let i = 0; i < articlesLen; i++) {
-                    const article = articles[i].article
-                    setTimeout(() => {
-                        console.log(`Searching ${article} ...`)
-                        document.getElementById('downloaded-item').innerText = `Searching ${article} ...`
-                        downloadItem(article)
-                    }, 300)
+            button, input {
+                font-size: inherit;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Local Wiki Crawler by <a href="https://jpkmiller.github.io">jpkmiller</a></h1>
+        <h2>Before searching click the Download button</h2>
+
+        <!-- download the 1000 trending articles from wikipedia -->
+        <div id="download">
+            <button id="download-wiki-btn">Download from Wikipedia.de</button>
+            <progress id="download-progress" value="0" max="1.0" style="display: none"></progress>
+            <div>
+                <span id="downloaded-item"></span>
+            </div>
+        </div>
+        <br>
+
+        <div id="search">
+            <input id="search-input" />
+            <label for="search-input">
+                <button id="search-btn">Search</button>
+            </label>
+            <button id="clear-btn">Clear</button>
+            <div id="search-result"></div>
+        </div>
+
+        <noscript>
+            It seems that JavaScript is currently deactivated. Please activate it to use this site properly.
+            If not... well I can't force you, or can I? ;)
+        </noscript>
+        <script>
+            const QUERY_WIKIPEDIA_DE = "https://de.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&excontinue=0&format=json&origin=*&titles="
+            const QUERY_TRENDING_WIKIPEDIA_DE = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/de.wikipedia/all-access/YEAR/MONTH/all-days"
+
+            let articlesDownloaded = 0;
+            let articlesTotal = 0;
+
+            function getCachedItem(query) {
+                return localStorage.getItem(query)
+            }
+
+            function saveItem(query, value) {
+                localStorage.setItem(query, value)
+            }
+
+            /*
+            Sends a request to Wikipedia.
+            */
+            async function downloadWikiItem(query) {
+                const response = await fetch(`${QUERY_WIKIPEDIA_DE}${query}`)
+                if (!response.ok) {
+                    throw Error(response.statusText)
                 }
+                return await response.json()
             }
-        }
 
-        xhr.open('GET', `${QUERY_TRENDING_WIKIPEDIA_DE.replace('YEAR', YEAR).replace('MONTH', MONTH)}`, true)
-        xhr.send()
-    }
-
-    /*
-    Go through recent months, get trending articles and download them.
-     */
-    function saveDatabase() {
-        console.log('Downloading Wiki Database')
-
-        const now = new Date();
-        for (let d = new Date(2021, 0, 1); d <= now; new Date(d.setMonth(d.getMonth() + 1))) {
-            const YEAR = d.getFullYear().toString()
-            const MONTH = ('0' + (d.getMonth())).slice(-2) /* https://stackoverflow.com/a/3605248 */
-            setTimeout(() => {
-                getTrendingArticles(YEAR, MONTH)
-            }, 1000)
-        }
-    }
-
-    function searchCachedItem() {
-        const query = document.getElementById('search-input').value
-        var item = getCachedItem(query)
-        console.log(`Searching for ${query}`)
-        if (item == null) {
-            /* fallback */
-            /* used from https://gist.github.com/n0m4dz/77f08d3de1b9115e905c by https://github.com/n0m4dz */
-            for (let i in localStorage) {
-                if (localStorage.hasOwnProperty(i)) {
-                    if (i.toLowerCase().match(query.trim().toLowerCase()) || (!query && typeof i === 'string')) {
-                        item = localStorage.getItem(i);
-                        break;
+            /*
+            Sends a request to Wikipedia via downloadWikiItem() to download the contents of a page.
+            The contents is sent as a JSON is then saved to the localStorage with saveItem().
+             */
+            function downloadAndSaveWikiItem(query) {
+                if (getCachedItem(query) === null) {
+                    try {
+                        console.log(`Downloading ${query} ...`)
+                        /* document.getElementById('downloaded-item').innerText = `Downloading ${query} ...` */
+                        downloadWikiItem(query)
+                                .then(item => {
+                                    const page = Object.keys(item.query.pages)[0]
+                                    const extractedData = item.query.pages[page].extract
+                                    if (typeof extractedData !== 'undefined') {
+                                        saveItem(query, extractedData)
+                                    }
+                                }).catch(e => e.message)
+                    } catch (err) {
+                        console.error(err)
                     }
                 }
             }
-        }
-        document.getElementById('search-result').innerText = item
-    }
 
-    function clear() {
-        document.getElementById('search-input').value = ''
-        document.getElementById('search-result').innerText = ''
-        document.getElementById('downloaded-item').innerText = ''
-    }
+            /*
+            Gets trending articles from Wikipedia from specific month and year and then downloads them via downloadAndSaveWikiItem().
+            */
+            function getTrendingWikiItems(YEAR, MONTH) {
+                const xhr = new XMLHttpRequest();
+                console.log(`Downloading for ${YEAR}/${MONTH}...`)
 
-    document.getElementById('download-wiki-btn').addEventListener('click', saveDatabase)
-    document.getElementById('search-btn').addEventListener('click', searchCachedItem)
-    document.getElementById('clear-btn').addEventListener('click', clear)
-</script>
-</body>
+                xhr.onreadystatechange = function () {
+                    const data = JSON.parse(this.response)
+                    if ('articles' in data.items[0]) {
+                        const articles = data.items[0].articles
+                        const articlesLen = articles.length
+                        articlesTotal += articlesLen
+                        document.getElementById('download-progress').max = articlesTotal
+                        for (let i = 0; i < articlesLen; i++) {
+                            const article = articles[i].article
+                            setTimeout(() => {
+                                console.log(`Searching ${article} ...`)
+                                articlesDownloaded += 1
+                                document.getElementById('download-progress').value = articlesDownloaded
+                                document.getElementById('downloaded-item').innerText = `Searching ${article} ...`
+                                downloadAndSaveWikiItem(article)
+                            }, 300)
+                        }
+                    }
+                }
+
+                xhr.open('GET', `${QUERY_TRENDING_WIKIPEDIA_DE.replace('YEAR', YEAR).replace('MONTH', MONTH)}`, true)
+                xhr.send()
+            }
+
+            /*
+            Go through recent months, get trending articles and download them.
+             */
+            function downloadWikipedia() {
+                console.log('Downloading Wiki Database')
+                document.getElementById('download-progress').style.display = 'block'
+
+                const now = new Date();
+                for (let d = new Date(2021, 0, 1); d <= now; new Date(d.setMonth(d.getMonth() + 1))) {
+                    const YEAR = d.getFullYear().toString()
+                    const MONTH = ('0' + (d.getMonth())).slice(-2) /* https://stackoverflow.com/a/3605248 */
+                    setTimeout(() => {
+                        getTrendingWikiItems(YEAR, MONTH)
+                    }, 1000)
+                }
+            }
+
+            function searchCachedItem() {
+                const query = document.getElementById('search-input').value
+                let item = getCachedItem(query);
+                console.log(`Searching for ${query}`)
+                if (item == null) {
+                    /* fallback */
+                    /* used from https://gist.github.com/n0m4dz/77f08d3de1b9115e905c by https://github.com/n0m4dz */
+                    for (let i in localStorage) {
+                        if (localStorage.hasOwnProperty(i)) {
+                            if (i.toLowerCase().match(query.trim().toLowerCase()) || (!query && typeof i === 'string')) {
+                                item = localStorage.getItem(i);
+                                break;
+                            }
+                        }
+                    }
+                }
+                document.getElementById('search-result').innerText = item
+            }
+
+            function clear() {
+                document.getElementById('search-input').value = ''
+                document.getElementById('search-result').innerText = ''
+                document.getElementById('downloaded-item').innerText = ''
+                document.getElementById('download-progress').style.display = 'none'
+            }
+
+            document.getElementById('download-wiki-btn').addEventListener('click', downloadWikipedia)
+            document.getElementById('search-btn').addEventListener('click', searchCachedItem)
+            document.getElementById('clear-btn').addEventListener('click', clear)
+        </script>
+    </body>
 </html>
