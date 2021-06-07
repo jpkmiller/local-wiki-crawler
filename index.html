@@ -141,7 +141,7 @@
             /* used from https://gist.github.com/n0m4dz/77f08d3de1b9115e905c by https://github.com/n0m4dz */
             for (let i in localStorage) {
                 if (localStorage.hasOwnProperty(i)) {
-                    if (i.match(query) || (!query && typeof i === 'string')) {
+                    if (i.toLowerCase().match(query.trim().toLowerCase()) || (!query && typeof i === 'string')) {
                         item = localStorage.getItem(i);
                         break;
                     }
